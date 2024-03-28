@@ -17,13 +17,14 @@ arp_packet_queue *init_packet_queue() {
 void send_arp_request(uint8_t *sender_mac, uint32_t sender_ip,
                       uint32_t target_ip, int interface) {
     uint8_t broadcast_mac[6];
-    int res = hwaddr_aton("ff:ff:ff:ff:ff:ff", broadcast_mac);
-    DIE(!res, "MAC broadcast address parsing failed.");
+    int res = hwaddr_aton("FF:FF:FF:FF:FF:FF", broadcast_mac);
+    DIE(res, "MAC broadcast address parsing failed.");
 
     char *request_packet = create_arp_packet(sender_mac, broadcast_mac,
                                              sender_ip, target_ip, ARP_OP_REQUEST);
 
-    send_to_link(interface, request_packet, sizeof(request_packet));
+    size_t length = sizeof(struct ether_header) + sizeof (struct arp_header);
+    send_to_link(interface, request_packet, length);
     free(request_packet);
 }
 
@@ -34,7 +35,8 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
     char *reply_packet = create_arp_packet(sender_mac, target_mac, sender_ip,
                                            target_ip, ARP_OP_REPLY);
 
-    send_to_link(interface, reply_packet, sizeof(reply_packet));
+    size_t length = sizeof(struct ether_header) + sizeof (struct arp_header);
+    send_to_link(interface, reply_packet, length);
     free(reply_packet);
 }
 
@@ -75,7 +77,7 @@ uint8_t *search_addr_in_cache(list arp_cache, uint32_t target_ip) {
 int check_for_broadcast(uint8_t *target_mac) {
     uint8_t broadcast_mac[6];
     int res = hwaddr_aton("ff:ff:ff:ff:ff:ff", broadcast_mac);
-    DIE(!res, "MAC broadcast address parsing failed.");
+    DIE(res, "MAC broadcast address parsing failed.");
 
     int cmp_res = memcmp(broadcast_mac, target_mac, 6 * sizeof(uint8_t));
 

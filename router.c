@@ -7,10 +7,10 @@
 
 int main(int argc, char *argv[])
 {
-	char buf[MAX_PACKET_LEN];
+    char buf[MAX_PACKET_LEN];
 
-	// Do not modify this line
-	init(argc - 2, argv + 2);
+    // Do not modify this line
+    init(argc - 2, argv + 2);
 
     // Route table is in network order.
     struct route_table_entry *route_table = malloc(MAX_RTABLE_LEN * sizeof(struct route_table_entry));
@@ -26,14 +26,14 @@ int main(int argc, char *argv[])
     list arp_cache = NULL;
     arp_packet_queue *packet_queue = init_packet_queue();
 
-	while (1) {
-		int interface;
-		size_t len;
+    while (1) {
+        int interface;
+        size_t len;
 
-		interface = recv_from_any_link(buf, &len);
-		DIE(interface < 0, "recv_from_any_links");
+        interface = recv_from_any_link(buf, &len);
+        DIE(interface < 0, "recv_from_any_links");
 
-		struct ether_header *eth_hdr = (struct ether_header*) buf;
+        struct ether_header *eth_hdr = (struct ether_header*) buf;
 
         // IP of the current interface.
         char *dot_local_ip = get_interface_ip(interface); // IP in dot form
@@ -101,8 +101,10 @@ int main(int argc, char *argv[])
 
             if (ntohs(arp_hdr->op) == ARP_OP_REQUEST) {
                 if (arp_hdr->tpa == local_ip) {
+                    printf("First here.\n");
                     send_arp_reply(local_recv_mac, arp_hdr->sha, local_ip,
                                    arp_hdr->spa, interface);
+                    printf("Second here.\n");
                     continue;
                 }
             } else {
@@ -113,6 +115,6 @@ int main(int argc, char *argv[])
                  */
             }
         }
-	}
+    }
 }
 
