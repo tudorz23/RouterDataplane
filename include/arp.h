@@ -7,9 +7,6 @@
 #include "protocols.h"
 #include "utils.h"
 
-#define ARP_OP_REQUEST 1
-#define ARP_OP_REPLY 2
-
 
 struct arp_cache_entry {
     uint32_t ip;
@@ -17,6 +14,21 @@ struct arp_cache_entry {
 };
 
 typedef struct arp_cache_entry arp_cache_entry;
+
+
+struct arp_packet_queue {
+    queue packets;
+    int cnt;
+};
+
+typedef struct arp_packet_queue arp_packet_queue;
+
+
+/**
+ * Initializes the packet queue.
+ * @return Dynamically allocated packet queue structure.
+ */
+arp_packet_queue *init_packet_queue();
 
 
 /**
@@ -46,6 +58,7 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
                     uint32_t sender_ip, uint32_t target_ip,
                     int interface);
 
+
 /**
  * Dynamically allocates memory for a copy of the orig_packet (because it will
  * disappear when a new packet will be received) and enqueues it in the
@@ -57,7 +70,8 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
  * @param orig_packet Packet to be added to the queue.
  * @param packet_len Size of the original packet.
  */
-void add_packet_in_queue(queue packet_queue, char *orig_packet, int packet_len);
+void add_packet_in_queue(arp_packet_queue *packet_queue, char *orig_packet,
+                         size_t packet_len);
 
 
 /**
@@ -87,6 +101,6 @@ int check_for_broadcast(uint8_t *target_mac);
  */
 char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
                         uint32_t sender_ip, uint32_t target_ip,
-                        uint16_t arp_op)
+                        uint16_t arp_op);
 
 #endif /* ARP_H */

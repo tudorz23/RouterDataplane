@@ -2,10 +2,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+
 int check_destination_validity(const uint8_t* destination_mac, const uint8_t *local_mac) {
     int broadcast = 1;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
         if (destination_mac[i] != 0xff) {
             broadcast = 0;
             break;
@@ -16,7 +17,7 @@ int check_destination_validity(const uint8_t* destination_mac, const uint8_t *lo
         return 1;
     }
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
         if (destination_mac[i] != local_mac[i]) {
             return 0;
         }
@@ -73,6 +74,7 @@ int rtable_compare_func(const void *rtable_entry1, const void *rtable_entry2) {
     return 0;
 }
 
+
 // TODO: optimize the search algorithm
 struct route_table_entry *get_best_route(struct route_table_entry *route_table,
                                        int rtable_size, uint32_t dest_ip) {
@@ -98,6 +100,7 @@ uint8_t *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
     }
     return NULL;
 }
+
 
 void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
                            const uint8_t *new_src) {

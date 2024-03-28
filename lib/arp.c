@@ -1,7 +1,17 @@
 #include "arp.h"
 #include <string.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+
+
+arp_packet_queue *init_packet_queue() {
+    arp_packet_queue *packet_queue = malloc(sizeof(arp_packet_queue));
+    DIE(!packet_queue, "Packet queue malloc failed.");
+
+    packet_queue->packets = queue_create();
+    packet_queue->cnt = 0;
+
+    return packet_queue;
+}
 
 
 void send_arp_request(uint8_t *sender_mac, uint32_t sender_ip,
@@ -28,12 +38,16 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
     free(reply_packet);
 }
 
-void add_packet_in_queue(queue packet_queue, char *orig_packet, int packet_len) {
+
+void add_packet_in_queue(arp_packet_queue *packet_queue, char *orig_packet,
+                         size_t packet_len) {
     char *new_packet = malloc(packet_len);
     DIE(!new_packet, "Malloc failed.");
 
     memcpy(new_packet, orig_packet, packet_len);
-    queue_enq(packet_queue, new_packet);
+
+    queue_enq(packet_queue->packets, new_packet);
+    packet_queue->cnt += 1;
 }
 
 
@@ -87,11 +101,11 @@ char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
 
     struct arp_header *arp_hdr = (struct arp_header*) (packet + sizeof(struct ether_header));
 
-    arp_hdr->htype = 1; // For Ethernet.
+    arp_hdr->htype = htons(HARDWARE_TYPE_ETH);
     arp_hdr->ptype = htons(ETHER_TYPE_IPV4);
     arp_hdr->hlen = 6;
     arp_hdr->plen = 4;
-    arp_hdr->op = arp_op;
+    arp_hdr->op = htons(arp_op);
     mac_copy(arp_hdr->sha, sender_mac);
     arp_hdr->spa = sender_ip;
     mac_copy(arp_hdr->tha, target_mac);

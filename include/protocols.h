@@ -6,6 +6,9 @@
 
 #define ETHER_TYPE_ARP 0x806
 #define ETHER_TYPE_IPV4 0x800
+#define ARP_OP_REQUEST 1
+#define ARP_OP_REPLY 2
+#define HARDWARE_TYPE_ETH 1
 #define IPV4_ICMP 1
 
 /* Ethernet ARP packet from RFC 826 */

@@ -22,15 +22,9 @@ int main(int argc, char *argv[])
             rtable_compare_func);
 
 
-    // TODO: Delete and replace with dynamic ARP.
-    // Network order.
-    struct arp_table_entry *arp_table = malloc(50 * sizeof (struct arp_table_entry));
-    DIE(!arp_table, "ARP table malloc failed.");
-    int arp_table_size = parse_arp_table("arp_table.txt", arp_table);
-
     // Initialize the ARP cache and the packet queue.
     list arp_cache = NULL;
-    queue packet_queue = queue_create();
+    arp_packet_queue *packet_queue = init_packet_queue();
 
 	while (1) {
 		int interface;
@@ -41,12 +35,15 @@ int main(int argc, char *argv[])
 
 		struct ether_header *eth_hdr = (struct ether_header*) buf;
 
-        // IP and MAC of the current interface.
-        char *local_ip = get_interface_ip(interface); // IP in dot form
-        uint8_t local_mac[6];
-        get_interface_mac(interface, local_mac);
+        // IP of the current interface.
+        char *dot_local_ip = get_interface_ip(interface); // IP in dot form
+        uint32_t local_ip = inet_addr(dot_local_ip); // IP in network order
 
-        if (!check_destination_validity(eth_hdr->ether_dhost, local_mac)) {
+        // MAC of the current interface.
+        uint8_t local_recv_mac[6];
+        get_interface_mac(interface, local_recv_mac);
+
+        if (!check_destination_validity(eth_hdr->ether_dhost, local_recv_mac)) {
             continue;
         }
 
@@ -55,7 +52,8 @@ int main(int argc, char *argv[])
         if (ntohs(eth_hdr->ether_type) == ETHER_TYPE_IPV4) {
             struct iphdr *ip_hdr = (struct iphdr*) (buf + sizeof(struct ether_header));
 
-            if (ip_hdr->daddr == inet_addr(local_ip)) {
+            // Check if the router is the actual destination.
+            if (ip_hdr->daddr == local_ip) {
                 if (ip_hdr->protocol == IPV4_ICMP) {
                     // TODO: Handle ICMP request.
                     printf("Got an ICMP req.\n");
@@ -73,36 +71,48 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            struct route_table_entry *best_route = get_best_route(route_table,
-                                                rtable_size, ntohl(ip_hdr->daddr));
+            struct route_table_entry *best_route = get_best_route(route_table, rtable_size,
+                                                                ntohl(ip_hdr->daddr));
             if (!best_route) {
                 // TODO: ICMP with "Destination unreachable".
                 printf("Destination unreachable.\n");
                 continue;
             }
 
-            // TODO: ARP request for the MAC of the target.
-            uint32_t next_hop_ip = ntohl(best_route->next_hop);
             int send_interface = best_route->interface;
+            uint8_t local_send_mac[6];
+            get_interface_mac(send_interface, local_send_mac);
 
-            uint8_t *next_hop_mac = get_next_hop_mac(arp_table, arp_table_size, next_hop_ip);
-            get_interface_mac(send_interface, local_mac);
+            uint8_t *next_hop_mac = search_addr_in_cache(arp_cache, ntohl(best_route->next_hop));
+            if (!next_hop_mac) {
+                add_packet_in_queue(packet_queue, buf, len);
 
-            update_mac_addresses(eth_hdr, next_hop_mac, local_mac);
+                send_arp_request(local_send_mac, local_ip,
+                                 best_route->next_hop, send_interface);
+                continue;
+            }
+
+            // Found the address in cache.
+            update_mac_addresses(eth_hdr, next_hop_mac, local_send_mac);
             send_to_link(send_interface, buf, len);
 
         } else if (ntohs(eth_hdr->ether_type) == ETHER_TYPE_ARP) {
-            // TODO: Either respond to a broadcast, or parse a reply to own broadcast.
             struct arp_header *arp_hdr = (struct arp_header*) (buf + sizeof(struct ether_header));
 
-            if (check_for_broadcast(eth_hdr->ether_dhost)) {
-                if (arp_hdr->tpa == inet_addr(local_ip)) {
-                    // TODO: ARP reply with my MAC.
+            if (ntohs(arp_hdr->op) == ARP_OP_REQUEST) {
+                if (arp_hdr->tpa == local_ip) {
+                    send_arp_reply(local_recv_mac, arp_hdr->sha, local_ip,
+                                   arp_hdr->spa, interface);
                     continue;
                 }
+            } else {
+                // Received an ARP_OP_REPLY
+                /* TODO: Update the cache and check the queue for a packet
+                    whose dest_mac has been solved by the ARP_reply.
+                    Then, send that packet and free the memory of the queue element.
+                 */
             }
         }
-
 	}
 }
 
