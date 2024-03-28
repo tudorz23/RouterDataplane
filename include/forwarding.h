@@ -7,9 +7,6 @@
 #include "protocols.h"
 
 #define MAX_RTABLE_LEN 100001
-#define ETHER_TYPE_IPV4 0x800
-#define ETHER_TYPE_ARP 0x806
-#define IPV4_ICMP 1
 
 
 /**
@@ -43,11 +40,19 @@ int update_ttl(struct iphdr *ip_hdr);
 int rtable_compare_func(const void *mask1, const void *mask2);
 
 
+/**
+ * Longest Prefix Match algorithm, done inefficiently.
+ */
 struct route_table_entry *get_best_route(struct route_table_entry *route_table,
                                        int rtable_size, uint32_t dest_ip);
 
-char *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
+
+uint8_t *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
                        uint32_t next_hop_ip);
+
+
+void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
+                          const uint8_t *new_src);
 
 /**
  * Prints MAC address in string form, with hex numbers.

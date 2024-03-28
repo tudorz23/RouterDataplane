@@ -1,5 +1,12 @@
+#ifndef PROTOCOLS_H
+#define PROTOCOLS_H
+
 #include <unistd.h>
 #include <stdint.h>
+
+#define ETHER_TYPE_ARP 0x806
+#define ETHER_TYPE_IPV4 0x800
+#define IPV4_ICMP 1
 
 /* Ethernet ARP packet from RFC 826 */
 struct arp_header {
@@ -57,3 +64,5 @@ struct icmphdr
     } frag;                        /* path mtu discovery */
   } un;
 };
+
+#endif /* PROTOCOLS_H */

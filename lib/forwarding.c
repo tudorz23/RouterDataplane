@@ -25,6 +25,7 @@ int check_destination_validity(const uint8_t* destination_mac, const uint8_t *lo
     return 1;
 }
 
+
 int authorize_checksum(struct iphdr *ip_hdr) {
     uint16_t old_checksum = ip_hdr->check;
     ip_hdr->check = 0;
@@ -38,6 +39,7 @@ int authorize_checksum(struct iphdr *ip_hdr) {
     ip_hdr->check = old_checksum;
     return 1;
 }
+
 
 int update_ttl(struct iphdr *ip_hdr) {
     if (ip_hdr->ttl <= 1) {
@@ -53,6 +55,7 @@ int update_ttl(struct iphdr *ip_hdr) {
 
     return 1;
 }
+
 
 int rtable_compare_func(const void *rtable_entry1, const void *rtable_entry2) {
     uint32_t mask1 = ntohl(((struct route_table_entry *) rtable_entry1)->mask);
@@ -85,15 +88,25 @@ struct route_table_entry *get_best_route(struct route_table_entry *route_table,
     return NULL;
 }
 
-char *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
-                       uint32_t next_hop_ip) {
+
+uint8_t *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
+                          uint32_t next_hop_ip) {
     for (int i = 0; i < arp_table_size; i++) {
         if (ntohl(arp_table[i].ip) == next_hop_ip) {
-            return (char *) arp_table[i].mac;
+            return arp_table[i].mac;
         }
     }
     return NULL;
 }
+
+void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
+                           const uint8_t *new_src) {
+    for (int i = 0; i < 6; i++) {
+        eth_hdr->ether_dhost[i] = new_dst[i];
+        eth_hdr->ether_shost[i] = new_src[i];
+    }
+}
+
 
 void print_mac(uint8_t *mac_addr) {
     for (int i = 0; i < 6; i++) {
