@@ -125,7 +125,7 @@ char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
 }
 
 
-void handle_arp_reply(struct arp_header *arp_hdr, list arp_cache,
+void handle_arp_reply(struct arp_header *arp_hdr, list *arp_cache,
                       arp_packet_queue *packet_queue) {
     add_cache_entry(arp_cache, arp_hdr->spa, arp_hdr->sha);
 
@@ -156,12 +156,12 @@ void handle_arp_reply(struct arp_header *arp_hdr, list arp_cache,
 }
 
 
-void add_cache_entry(list arp_cache, uint32_t ip, uint8_t *mac) {
+void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac) {
     arp_cache_entry *new_entry = malloc(sizeof(arp_cache_entry));
     DIE(!new_entry, "ARP cache entry malloc failed.");
 
     new_entry->ip = ip;
     mac_copy(new_entry->mac, mac);
 
-    cons(new_entry, arp_cache);
+    *arp_cache = cons(new_entry, *arp_cache);
 }

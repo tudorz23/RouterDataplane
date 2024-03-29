@@ -115,7 +115,7 @@ char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
 
 
 
-void handle_arp_reply(struct arp_header *arp_hdr, list arp_cache,
+void handle_arp_reply(struct arp_header *arp_hdr, list *arp_cache,
                       arp_packet_queue *packet_queue);
 
 
@@ -126,6 +126,6 @@ void handle_arp_reply(struct arp_header *arp_hdr, list arp_cache,
  * @param ip New IPv4 address (Network order)
  * @param mac New MAC address
  */
-void add_cache_entry(list arp_cache, uint32_t ip, uint8_t *mac);
+void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac);
 
 #endif /* ARP_H */

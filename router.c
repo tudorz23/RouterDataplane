@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     qsort((void *) route_table, rtable_size, sizeof(struct route_table_entry),
             rtable_compare_func);
 
-    // TODO: Change list to array.
     // Initialize the ARP cache and the packet queue.
     list arp_cache = NULL;
     arp_packet_queue *packet_queue = init_packet_queue();
@@ -111,7 +110,7 @@ int main(int argc, char *argv[])
                     whose dest_mac has been solved by the ARP_reply.
                     Then, send that packet and free the memory of the queue element.
                  */
-                handle_arp_reply(arp_hdr, arp_cache, packet_queue);
+                handle_arp_reply(arp_hdr, &arp_cache, packet_queue);
             }
         }
     }
