@@ -27,7 +27,8 @@ int authorize_checksum(struct iphdr *ip_hdr);
 
 
 /**
- * Checks whether the TTL is > 1. If it is, decrements it.
+ * Checks whether the TTL is > 1. If it is, decrements it
+ * and updates the checksum.
  * @return 1 for success, 0 otherwise.
  */
 int update_ttl(struct iphdr *ip_hdr);
@@ -50,9 +51,6 @@ struct route_table_entry *get_best_route(struct route_table_entry *route_table,
 uint8_t *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
                        uint32_t next_hop_ip);
 
-
-void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
-                          const uint8_t *new_src);
 
 /**
  * Prints MAC address in string form, with hex numbers.

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "protocols.h"
 
 
 /**
@@ -15,6 +16,7 @@
 void mac_copy(uint8_t *dest_mac, const uint8_t *src_mac);
 
 
-
+void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
+                          const uint8_t *new_src);
 
 #endif /* UTILS_H */

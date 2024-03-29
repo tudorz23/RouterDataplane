@@ -7,7 +7,7 @@ arp_packet_queue *init_packet_queue() {
     arp_packet_queue *packet_queue = malloc(sizeof(arp_packet_queue));
     DIE(!packet_queue, "Packet queue malloc failed.");
 
-    packet_queue->packets = queue_create();
+    packet_queue->entries = queue_create();
     packet_queue->cnt = 0;
 
     return packet_queue;
@@ -17,7 +17,7 @@ arp_packet_queue *init_packet_queue() {
 void send_arp_request(uint8_t *sender_mac, uint32_t sender_ip,
                       uint32_t target_ip, int interface) {
     uint8_t broadcast_mac[6];
-    int res = hwaddr_aton("FF:FF:FF:FF:FF:FF", broadcast_mac);
+    int res = hwaddr_aton("ff:ff:ff:ff:ff:ff", broadcast_mac);
     DIE(res, "MAC broadcast address parsing failed.");
 
     char *request_packet = create_arp_packet(sender_mac, broadcast_mac,
@@ -42,13 +42,21 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
 
 
 void add_packet_in_queue(arp_packet_queue *packet_queue, char *orig_packet,
-                         size_t packet_len) {
+                         struct route_table_entry *best_route, size_t packet_len) {
     char *new_packet = malloc(packet_len);
-    DIE(!new_packet, "Malloc failed.");
+    DIE(!new_packet, "Malloc for packet copy failed.");
 
     memcpy(new_packet, orig_packet, packet_len);
 
-    queue_enq(packet_queue->packets, new_packet);
+    // Create a new queue entry.
+    arp_queue_entry *new_entry = malloc(sizeof(arp_queue_entry ));
+    DIE(!new_entry, "Malloc for queue entry failed.");
+
+    new_entry->packet = new_packet;
+    new_entry->packet_len = packet_len;
+    new_entry->best_route = best_route;
+
+    queue_enq(packet_queue->entries, new_entry);
     packet_queue->cnt += 1;
 }
 
@@ -114,4 +122,46 @@ char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
     arp_hdr->tpa = target_ip;
 
     return packet;
+}
+
+
+void handle_arp_reply(struct arp_header *arp_hdr, list arp_cache,
+                      arp_packet_queue *packet_queue) {
+    add_cache_entry(arp_cache, arp_hdr->spa, arp_hdr->sha);
+
+    // Iterate the queue and retrieve the packet whose next hop's MAC
+    // address has just been received (i.e. look at the IP of each entry)
+    for (int i = 0; i < packet_queue->cnt; i++) {
+        arp_queue_entry *entry = (arp_queue_entry*) queue_deq(packet_queue->entries);
+
+        if (entry->best_route->next_hop == arp_hdr->spa) {
+            // Send the packet.
+            uint8_t local_send_mac[6];
+            get_interface_mac(entry->best_route->interface, local_send_mac);
+
+            struct ether_header *eth_hdr = (struct ether_header*) entry->packet;
+            update_mac_addresses(eth_hdr, arp_hdr->sha, local_send_mac);
+            send_to_link(entry->best_route->interface, entry->packet, entry->packet_len);
+
+            free(entry->packet);
+            free(entry);
+
+            packet_queue->cnt -= 1;
+            return;
+        }
+
+        // If the packet is not sent, re-enqueue it.
+        queue_enq(packet_queue->entries, entry);
+    }
+}
+
+
+void add_cache_entry(list arp_cache, uint32_t ip, uint8_t *mac) {
+    arp_cache_entry *new_entry = malloc(sizeof(arp_cache_entry));
+    DIE(!new_entry, "ARP cache entry malloc failed.");
+
+    new_entry->ip = ip;
+    mac_copy(new_entry->mac, mac);
+
+    cons(new_entry, arp_cache);
 }

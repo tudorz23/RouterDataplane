@@ -102,15 +102,6 @@ uint8_t *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
 }
 
 
-void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
-                           const uint8_t *new_src) {
-    for (int i = 0; i < 6; i++) {
-        eth_hdr->ether_dhost[i] = new_dst[i];
-        eth_hdr->ether_shost[i] = new_src[i];
-    }
-}
-
-
 void print_mac(uint8_t *mac_addr) {
     for (int i = 0; i < 6; i++) {
         printf("%x:", mac_addr[i]);

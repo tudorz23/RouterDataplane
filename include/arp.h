@@ -9,15 +9,25 @@
 
 
 struct arp_cache_entry {
-    uint32_t ip;
+    uint32_t ip;    // Network order
     uint8_t mac[6];
 };
 
 typedef struct arp_cache_entry arp_cache_entry;
 
 
+// Allows for fast access to the next hop of a packet.
+struct arp_queue_entry {
+    char *packet;
+    size_t packet_len;
+    struct route_table_entry *best_route;
+};
+
+typedef struct arp_queue_entry arp_queue_entry;
+
+
 struct arp_packet_queue {
-    queue packets;
+    queue entries;
     int cnt;
 };
 
@@ -61,8 +71,8 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
 
 /**
  * Dynamically allocates memory for a copy of the orig_packet (because it will
- * disappear when a new packet will be received) and enqueues it in the
- * router's packet_queue.
+ * disappear when a new packet will be received) and creates a new arp_queue_entry,
+ * then enqueues it in the router's packet_queue.
  *
  * Note that the additional packet must be freed after dequeue and send.
  *
@@ -71,7 +81,7 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
  * @param packet_len Size of the original packet.
  */
 void add_packet_in_queue(arp_packet_queue *packet_queue, char *orig_packet,
-                         size_t packet_len);
+                         struct route_table_entry *best_route, size_t packet_len);
 
 
 /**
@@ -102,5 +112,20 @@ int check_for_broadcast(uint8_t *target_mac);
 char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
                         uint32_t sender_ip, uint32_t target_ip,
                         uint16_t arp_op);
+
+
+
+void handle_arp_reply(struct arp_header *arp_hdr, list arp_cache,
+                      arp_packet_queue *packet_queue);
+
+
+
+/**
+ * Allocates memory for a new cache entry and adds it in the arp_cache.
+ * @param arp_cache Router cache containing already discovered arp mappings.
+ * @param ip New IPv4 address (Network order)
+ * @param mac New MAC address
+ */
+void add_cache_entry(list arp_cache, uint32_t ip, uint8_t *mac);
 
 #endif /* ARP_H */

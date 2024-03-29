@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     qsort((void *) route_table, rtable_size, sizeof(struct route_table_entry),
             rtable_compare_func);
 
-
+    // TODO: Change list to array.
     // Initialize the ARP cache and the packet queue.
     list arp_cache = NULL;
     arp_packet_queue *packet_queue = init_packet_queue();
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
             uint8_t *next_hop_mac = search_addr_in_cache(arp_cache, ntohl(best_route->next_hop));
             if (!next_hop_mac) {
-                add_packet_in_queue(packet_queue, buf, len);
+                add_packet_in_queue(packet_queue, buf, best_route, len);
 
                 send_arp_request(local_send_mac, local_ip,
                                  best_route->next_hop, send_interface);
@@ -101,10 +101,8 @@ int main(int argc, char *argv[])
 
             if (ntohs(arp_hdr->op) == ARP_OP_REQUEST) {
                 if (arp_hdr->tpa == local_ip) {
-                    printf("First here.\n");
                     send_arp_reply(local_recv_mac, arp_hdr->sha, local_ip,
                                    arp_hdr->spa, interface);
-                    printf("Second here.\n");
                     continue;
                 }
             } else {
@@ -113,6 +111,7 @@ int main(int argc, char *argv[])
                     whose dest_mac has been solved by the ARP_reply.
                     Then, send that packet and free the memory of the queue element.
                  */
+                handle_arp_reply(arp_hdr, arp_cache, packet_queue);
             }
         }
     }
