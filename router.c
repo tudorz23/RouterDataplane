@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
         // IP of the current interface.
         char *dot_local_ip = get_interface_ip(interface); // IP in dot form
-        uint32_t local_ip = inet_addr(dot_local_ip); // IP in network order
+        uint32_t local_recv_ip = inet_addr(dot_local_ip); // IP in network order
 
         // MAC of the current interface.
         uint8_t local_recv_mac[6];
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
             struct iphdr *ip_hdr = (struct iphdr*) (buf + sizeof(struct ether_header));
 
             // Check if the router is the actual destination.
-            if (ip_hdr->daddr == local_ip) {
+            if (ip_hdr->daddr == local_recv_ip) {
                 if (ip_hdr->protocol == IPV4_ICMP) {
                     // TODO: Handle ICMP request.
                     printf("Got an ICMP req.\n");
@@ -78,14 +78,14 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            send_packet_safely(buf, len, local_ip, packet_queue, arp_cache, best_route);
+            send_packet_safely(buf, len, arp_cache, packet_queue, best_route);
 
         } else if (ntohs(eth_hdr->ether_type) == ETHER_TYPE_ARP) {
             struct arp_header *arp_hdr = (struct arp_header*) (buf + sizeof(struct ether_header));
 
             if (ntohs(arp_hdr->op) == ARP_OP_REQUEST) {
-                if (arp_hdr->tpa == local_ip) {
-                    send_arp_reply(local_recv_mac, arp_hdr->sha, local_ip,
+                if (arp_hdr->tpa == local_recv_ip) {
+                    send_arp_reply(local_recv_mac, arp_hdr->sha, local_recv_ip,
                                    arp_hdr->spa, interface);
                     continue;
                 }

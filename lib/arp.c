@@ -171,22 +171,25 @@ void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac) {
 }
 
 
-void send_packet_safely(char *packet, size_t packet_len, uint32_t local_ip,
-                        arp_packet_queue *packet_queue, list arp_cache,
+void send_packet_safely(char *packet, size_t packet_len, list arp_cache,
+                        arp_packet_queue *packet_queue,
                         struct route_table_entry *best_route) {
     int send_interface = best_route->interface;
     uint8_t local_send_mac[6];
     get_interface_mac(send_interface, local_send_mac);
 
+    uint32_t local_send_ip = inet_addr(get_interface_ip(best_route->interface));
+
     uint8_t *next_hop_mac = search_addr_in_cache(arp_cache, ntohl(best_route->next_hop));
     if (!next_hop_mac) {
         add_packet_in_queue(packet_queue, packet, best_route, packet_len);
 
-        send_arp_request(local_send_mac, local_ip,
+        send_arp_request(local_send_mac, local_send_ip,
                          best_route->next_hop, send_interface);
         return;
     }
 
+    printf("Found in cache\n");
     // If MAC address was found in the cache, send the packet.
     struct ether_header *eth_hdr = (struct ether_header*) packet;
     update_mac_addresses(eth_hdr, next_hop_mac, local_send_mac);

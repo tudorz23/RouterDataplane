@@ -6,6 +6,8 @@
 #include "lib.h"
 #include "protocols.h"
 #include "utils.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 
 struct arp_cache_entry {
@@ -140,11 +142,10 @@ void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac);
  * else, an ARP request is sent and the packet is enqueued in the packet queue.
  * @param packet Packet to send
  * @param packet_len Length of the packet
- * @param local_ip IP of the router (for an eventual ARP request)
  * @param best_route Route previously determined by the LPM algorithm
  */
-void send_packet_safely(char *packet, size_t packet_len, uint32_t local_ip,
-                        arp_packet_queue *packet_queue, list arp_cache,
+void send_packet_safely(char *packet, size_t packet_len, list arp_cache,
+                        arp_packet_queue *packet_queue,
                         struct route_table_entry *best_route);
 
 
