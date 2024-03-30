@@ -1,12 +1,10 @@
 #include "icmp.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "forwarding.h"
 
 
 void create_icmp_reply(struct iphdr *ip_hdr, size_t packet_len, list arp_cache,
-                       arp_packet_queue *packet_queue, struct route_table_entry *route_table,
-                       int rtable_size) {
+                       arp_packet_queue *packet_queue, route_table_t *route_table) {
     struct icmphdr *icmp_hdr = (struct icmphdr*) (((char*) ip_hdr) + sizeof(struct iphdr));
 
     // Create the answer packet.
@@ -51,8 +49,8 @@ void create_icmp_reply(struct iphdr *ip_hdr, size_t packet_len, list arp_cache,
     ans_icmp_hdr->checksum = htons(checksum((uint16_t *) ans_icmp_hdr,
                                             sizeof(struct icmphdr) + data_len));
 
-    struct route_table_entry *best_route = get_best_route(route_table, rtable_size,
-                                                          ntohl(ans_ip_hdr->daddr));
+    struct route_table_entry *best_route = get_best_route(route_table,
+                                            ntohl(ans_ip_hdr->daddr));
     DIE(!best_route, "There should be a valid route.\n");
 
     send_packet_safely(ans_packet, packet_len, arp_cache, packet_queue, best_route);
@@ -61,8 +59,7 @@ void create_icmp_reply(struct iphdr *ip_hdr, size_t packet_len, list arp_cache,
 
 
 void create_icmp_error(struct iphdr *ip_hdr, uint8_t error_type, list arp_cache,
-                       arp_packet_queue *packet_queue, struct route_table_entry *route_table,
-                       int rtable_size) {
+                       arp_packet_queue *packet_queue, route_table_t *route_table) {
     // Total size of the packet, consisting of the headers and first
     // 64 bits (i.e. 8 bytes) of data from the original packet.
     size_t err_packet_len = sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct icmphdr)
@@ -89,8 +86,8 @@ void create_icmp_error(struct iphdr *ip_hdr, uint8_t error_type, list arp_cache,
     err_ip_hdr->daddr = ip_hdr->saddr;
 
     // Best route is needed to deduce the source IP and MAC.
-    struct route_table_entry *best_route = get_best_route(route_table, rtable_size,
-                                                        ntohl(err_ip_hdr->daddr));
+    struct route_table_entry *best_route = get_best_route(route_table,
+                                    ntohl(err_ip_hdr->daddr));
     DIE(!best_route, "There should be a valid route.\n");
 
     uint32_t source_ip = inet_addr((get_interface_ip(best_route->interface)));

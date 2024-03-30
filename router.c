@@ -14,13 +14,10 @@ int main(int argc, char *argv[])
     init(argc - 2, argv + 2);
 
     // Route table is in network order.
-    struct route_table_entry *route_table = malloc(MAX_RTABLE_LEN * sizeof(struct route_table_entry));
-    DIE(!route_table, "Route table malloc failed.");
+    route_table_t *route_table = init_route_table(argv[1]);
 
-    int rtable_size = read_rtable(argv[1], route_table);
-
-    qsort((void *) route_table, rtable_size, sizeof(struct route_table_entry),
-            rtable_compare_func);
+    qsort((void *) route_table->entries, route_table->size,
+          sizeof(struct route_table_entry), rtable_compare_func);
 
     // Initialize the ARP cache and the packet queue.
     list arp_cache = NULL;
@@ -55,7 +52,7 @@ int main(int argc, char *argv[])
                 struct icmphdr *icmp_hdr = (struct icmphdr*) (buf + sizeof(struct ether_header)
                                             + sizeof(struct iphdr));
                 if (icmp_hdr->type == ICMP_ECHO_REQ_TYPE) {
-                    create_icmp_reply(ip_hdr, len, arp_cache, packet_queue, route_table, rtable_size);
+                    create_icmp_reply(ip_hdr, len, arp_cache, packet_queue, route_table);
                     continue;
                 }
             }
@@ -66,16 +63,16 @@ int main(int argc, char *argv[])
             }
 
             if (!update_ttl(ip_hdr)) {
-                create_icmp_error(ip_hdr, ICMP_TIME_EXCEEDED_TYPE, arp_cache,
-                                  packet_queue, route_table, rtable_size);
+                create_icmp_error(ip_hdr, ICMP_TIME_EXCEEDED_TYPE,
+                                  arp_cache, packet_queue, route_table);
                 continue;
             }
 
-            struct route_table_entry *best_route = get_best_route(route_table, rtable_size,
-                                                                ntohl(ip_hdr->daddr));
+            struct route_table_entry *best_route = get_best_route(route_table,
+                                            ntohl(ip_hdr->daddr));
             if (!best_route) {
-                create_icmp_error(ip_hdr, ICMP_DEST_UNREACHABLE_TYPE, arp_cache,
-                                  packet_queue, route_table, rtable_size);
+                create_icmp_error(ip_hdr, ICMP_DEST_UNREACHABLE_TYPE,
+                                  arp_cache, packet_queue, route_table);
                 continue;
             }
 

@@ -3,6 +3,19 @@
 #include <arpa/inet.h>
 
 
+route_table_t *init_route_table(const char *path) {
+    route_table_t *route_table = malloc(sizeof(route_table_t ));
+    DIE(!route_table, "Route table malloc.\n");
+
+    route_table->entries = malloc(MAX_RTABLE_LEN * sizeof(struct route_table_entry));
+    DIE(!route_table->entries, "Route table entries malloc failed.\n");
+
+    route_table->size = read_rtable(path, route_table->entries);
+
+    return route_table;
+}
+
+
 int check_destination_validity(const uint8_t* destination_mac, const uint8_t *local_mac) {
     int broadcast = 1;
 
@@ -76,28 +89,16 @@ int rtable_compare_func(const void *rtable_entry1, const void *rtable_entry2) {
 
 
 // TODO: optimize the search algorithm
-struct route_table_entry *get_best_route(struct route_table_entry *route_table,
-                                       int rtable_size, uint32_t dest_ip) {
-    for (int i = 0; i < rtable_size; i++) {
-        uint32_t entry_prefix = ntohl(route_table[i].prefix);
-        uint32_t entry_mask = ntohl(route_table[i].mask);
+struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t dest_ip) {
+    for (int i = 0; i < route_table->size; i++) {
+        uint32_t entry_prefix = ntohl(route_table->entries[i].prefix);
+        uint32_t entry_mask = ntohl(route_table->entries[i].mask);
 
         if ((dest_ip & entry_mask) == entry_prefix) {
-            return &route_table[i];
+            return &route_table->entries[i];
         }
     }
 
-    return NULL;
-}
-
-
-uint8_t *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
-                          uint32_t next_hop_ip) {
-    for (int i = 0; i < arp_table_size; i++) {
-        if (ntohl(arp_table[i].ip) == next_hop_ip) {
-            return arp_table[i].mac;
-        }
-    }
     return NULL;
 }
 

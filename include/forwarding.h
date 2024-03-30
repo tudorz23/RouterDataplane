@@ -9,6 +9,22 @@
 #define MAX_RTABLE_LEN 100001
 
 
+struct route_table {
+    struct route_table_entry *entries;
+    int size;
+};
+
+typedef struct route_table route_table_t;
+
+
+/**
+ * Initializes the route table entries and the table size.
+ * @param path File to read the entries from
+ * @return Allocated route table
+ */
+route_table_t *init_route_table(const char *path);
+
+
 /**
  *  Checks whether the destination_mac of the ethernet_header matches
  *  the router's interface MAC address or the broadcast address.
@@ -44,12 +60,7 @@ int rtable_compare_func(const void *mask1, const void *mask2);
 /**
  * Longest Prefix Match algorithm, done inefficiently.
  */
-struct route_table_entry *get_best_route(struct route_table_entry *route_table,
-                                       int rtable_size, uint32_t dest_ip);
-
-
-uint8_t *get_next_hop_mac(struct arp_table_entry *arp_table, int arp_table_size,
-                       uint32_t next_hop_ip);
+struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t dest_ip);
 
 
 /**
