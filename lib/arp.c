@@ -129,7 +129,9 @@ void handle_arp_reply(struct arp_header *arp_hdr, list *arp_cache,
                       arp_packet_queue *packet_queue) {
     add_cache_entry(arp_cache, arp_hdr->spa, arp_hdr->sha);
 
-    // Iterate the queue and retrieve the packet whose next hop's MAC
+    int sent_packets_cnt = 0;
+
+    // Iterate the queue and send the packets whose next hop's MAC
     // address has just been received (i.e. look at the IP of each entry)
     for (int i = 0; i < packet_queue->cnt; i++) {
         arp_queue_entry *entry = (arp_queue_entry*) queue_deq(packet_queue->entries);
@@ -146,13 +148,15 @@ void handle_arp_reply(struct arp_header *arp_hdr, list *arp_cache,
             free(entry->packet);
             free(entry);
 
-            packet_queue->cnt -= 1;
-            return;
+            sent_packets_cnt++;
+            continue;
         }
 
         // If the packet is not sent, re-enqueue it.
         queue_enq(packet_queue->entries, entry);
     }
+
+    packet_queue->cnt -= sent_packets_cnt;
 }
 
 
@@ -164,4 +168,27 @@ void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac) {
     mac_copy(new_entry->mac, mac);
 
     *arp_cache = cons(new_entry, *arp_cache);
+}
+
+
+void send_packet_safely(char *packet, size_t packet_len, uint32_t local_ip,
+                        arp_packet_queue *packet_queue, list arp_cache,
+                        struct route_table_entry *best_route) {
+    int send_interface = best_route->interface;
+    uint8_t local_send_mac[6];
+    get_interface_mac(send_interface, local_send_mac);
+
+    uint8_t *next_hop_mac = search_addr_in_cache(arp_cache, ntohl(best_route->next_hop));
+    if (!next_hop_mac) {
+        add_packet_in_queue(packet_queue, packet, best_route, packet_len);
+
+        send_arp_request(local_send_mac, local_ip,
+                         best_route->next_hop, send_interface);
+        return;
+    }
+
+    // If MAC address was found in the cache, send the packet.
+    struct ether_header *eth_hdr = (struct ether_header*) packet;
+    update_mac_addresses(eth_hdr, next_hop_mac, local_send_mac);
+    send_to_link(send_interface, packet, packet_len);
 }

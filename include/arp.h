@@ -114,7 +114,11 @@ char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
                         uint16_t arp_op);
 
 
-
+/**
+ * Updates the ARP cache with the newly received entry and iterates the packet
+ * queue, sending all the packets whose next hop's MAC has been discovered
+ * @param arp_hdr ARP header of the newly ARP reply
+ */
 void handle_arp_reply(struct arp_header *arp_hdr, list *arp_cache,
                       arp_packet_queue *packet_queue);
 
@@ -122,10 +126,26 @@ void handle_arp_reply(struct arp_header *arp_hdr, list *arp_cache,
 
 /**
  * Allocates memory for a new cache entry and adds it in the arp_cache.
- * @param arp_cache Router cache containing already discovered arp mappings.
+ * @param arp_cache Pointer to the router cache, containing already
+ * discovered ARP mappings
  * @param ip New IPv4 address (Network order)
  * @param mac New MAC address
  */
 void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac);
+
+
+/**
+ * Tries to send the packet with best_route already known, by first searching
+ * the cache for the MAC of the destination IP. If found, the packet is sent,
+ * else, an ARP request is sent and the packet is enqueued in the packet queue.
+ * @param packet Packet to send
+ * @param packet_len Length of the packet
+ * @param local_ip IP of the router (for an eventual ARP request)
+ * @param best_route Route previously determined by the LPM algorithm
+ */
+void send_packet_safely(char *packet, size_t packet_len, uint32_t local_ip,
+                        arp_packet_queue *packet_queue, list arp_cache,
+                        struct route_table_entry *best_route);
+
 
 #endif /* ARP_H */

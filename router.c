@@ -78,22 +78,7 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            int send_interface = best_route->interface;
-            uint8_t local_send_mac[6];
-            get_interface_mac(send_interface, local_send_mac);
-
-            uint8_t *next_hop_mac = search_addr_in_cache(arp_cache, ntohl(best_route->next_hop));
-            if (!next_hop_mac) {
-                add_packet_in_queue(packet_queue, buf, best_route, len);
-
-                send_arp_request(local_send_mac, local_ip,
-                                 best_route->next_hop, send_interface);
-                continue;
-            }
-
-            // Found the address in cache.
-            update_mac_addresses(eth_hdr, next_hop_mac, local_send_mac);
-            send_to_link(send_interface, buf, len);
+            send_packet_safely(buf, len, local_ip, packet_queue, arp_cache, best_route);
 
         } else if (ntohs(eth_hdr->ether_type) == ETHER_TYPE_ARP) {
             struct arp_header *arp_hdr = (struct arp_header*) (buf + sizeof(struct ether_header));
@@ -106,10 +91,6 @@ int main(int argc, char *argv[])
                 }
             } else {
                 // Received an ARP_OP_REPLY
-                /* TODO: Update the cache and check the queue for a packet
-                    whose dest_mac has been solved by the ARP_reply.
-                    Then, send that packet and free the memory of the queue element.
-                 */
                 handle_arp_reply(arp_hdr, &arp_cache, packet_queue);
             }
         }
