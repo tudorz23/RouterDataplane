@@ -7,8 +7,13 @@
 #include "arp.h"
 
 
-void generate_icmp_reply(struct iphdr *ip_hdr, size_t packet_len, list arp_cache,
+void create_icmp_reply(struct iphdr *ip_hdr, size_t packet_len, list arp_cache,
                          arp_packet_queue *packet_queue, struct route_table_entry *route_table,
                          int rtable_size);
+
+
+void create_icmp_error(struct iphdr *ip_hdr, uint8_t error_type, list arp_cache,
+                       arp_packet_queue *packet_queue, struct route_table_entry *route_table,
+                       int rtable_size);
 
 #endif /* ICMP_H */

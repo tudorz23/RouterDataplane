@@ -47,8 +47,6 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        printf("Ether type is %x\n", ntohs(eth_hdr->ether_type));
-
         if (ntohs(eth_hdr->ether_type) == ETHER_TYPE_IPV4) {
             struct iphdr *ip_hdr = (struct iphdr*) (buf + sizeof(struct ether_header));
 
@@ -57,10 +55,7 @@ int main(int argc, char *argv[])
                 struct icmphdr *icmp_hdr = (struct icmphdr*) (buf + sizeof(struct ether_header)
                                             + sizeof(struct iphdr));
                 if (icmp_hdr->type == ICMP_ECHO_REQ_TYPE) {
-                    // TODO: Handle ICMP request.
-                    printf("Got an ICMP req.\n");
-
-                    generate_icmp_reply(ip_hdr, len, arp_cache, packet_queue, route_table, rtable_size);
+                    create_icmp_reply(ip_hdr, len, arp_cache, packet_queue, route_table, rtable_size);
                     continue;
                 }
             }
@@ -71,15 +66,16 @@ int main(int argc, char *argv[])
             }
 
             if (!update_ttl(ip_hdr)) {
-                // TODO: Send back an ICMP message with "Time exceeded".
+                create_icmp_error(ip_hdr, ICMP_TIME_EXCEEDED_TYPE, arp_cache,
+                                  packet_queue, route_table, rtable_size);
                 continue;
             }
 
             struct route_table_entry *best_route = get_best_route(route_table, rtable_size,
                                                                 ntohl(ip_hdr->daddr));
             if (!best_route) {
-                // TODO: ICMP with "Destination unreachable".
-                printf("Destination unreachable.\n");
+                create_icmp_error(ip_hdr, ICMP_DEST_UNREACHABLE_TYPE, arp_cache,
+                                  packet_queue, route_table, rtable_size);
                 continue;
             }
 
