@@ -1,9 +1,10 @@
-#include "queue.h"
 #include "lib.h"
 #include "forwarding.h"
+#include "arp.h"
+#include "icmp.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "arp.h"
+
 
 int main(int argc, char *argv[])
 {
@@ -52,10 +53,14 @@ int main(int argc, char *argv[])
             struct iphdr *ip_hdr = (struct iphdr*) (buf + sizeof(struct ether_header));
 
             // Check if the router is the actual destination.
-            if (ip_hdr->daddr == local_recv_ip) {
-                if (ip_hdr->protocol == IPV4_ICMP) {
+            if (ip_hdr->daddr == local_recv_ip && ip_hdr->protocol == IPV4_ICMP) {
+                struct icmphdr *icmp_hdr = (struct icmphdr*) (buf + sizeof(struct ether_header)
+                                            + sizeof(struct iphdr));
+                if (icmp_hdr->type == ICMP_ECHO_REQ_TYPE) {
                     // TODO: Handle ICMP request.
                     printf("Got an ICMP req.\n");
+
+                    generate_icmp_reply(ip_hdr, len, arp_cache, packet_queue, route_table, rtable_size);
                     continue;
                 }
             }

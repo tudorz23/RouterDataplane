@@ -16,6 +16,9 @@
 void mac_copy(uint8_t *dest_mac, const uint8_t *src_mac);
 
 
+/**
+ * Updates the source and destination MAC addresses of an Ethernet header.
+ */
 void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
                           const uint8_t *new_src);
 

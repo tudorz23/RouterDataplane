@@ -1,6 +1,7 @@
 #include "arp.h"
 #include <string.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 
 arp_packet_queue *init_packet_queue() {
@@ -189,7 +190,6 @@ void send_packet_safely(char *packet, size_t packet_len, list arp_cache,
         return;
     }
 
-    printf("Found in cache\n");
     // If MAC address was found in the cache, send the packet.
     struct ether_header *eth_hdr = (struct ether_header*) packet;
     update_mac_addresses(eth_hdr, next_hop_mac, local_send_mac);

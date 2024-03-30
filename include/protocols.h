@@ -4,12 +4,25 @@
 #include <unistd.h>
 #include <stdint.h>
 
+// For Ethernet
 #define ETHER_TYPE_ARP 0x806
 #define ETHER_TYPE_IPV4 0x800
+
+// For IPv4
+#define IPV4_ICMP 1
+
+// For ARP
 #define ARP_OP_REQUEST 1
 #define ARP_OP_REPLY 2
 #define HARDWARE_TYPE_ETH 1
-#define IPV4_ICMP 1
+
+// For ICMP
+#define ICMP_ECHO_REQ_TYPE 8
+#define ICMP_ECHO_REPLY_TYPE 0
+#define ICMP_DEST_UNREACHABLE_TYPE 3
+#define ICMP_TIME_EXCEEDED_TYPE 11
+#define ICMP_CODE 0
+
 
 /* Ethernet ARP packet from RFC 826 */
 struct arp_header {

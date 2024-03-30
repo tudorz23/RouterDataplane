@@ -6,8 +6,6 @@
 #include "lib.h"
 #include "protocols.h"
 #include "utils.h"
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 
 struct arp_cache_entry {

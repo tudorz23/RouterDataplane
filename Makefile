@@ -1,6 +1,6 @@
 PROJECT=router
 SOURCES=router.c lib/queue.c lib/list.c lib/lib.c lib/forwarding.c lib/arp.c \
-lib/utils.c
+lib/utils.c lib/icmp.c
 LIBRARY=nope
 INCPATHS=include
 LIBPATHS=.
