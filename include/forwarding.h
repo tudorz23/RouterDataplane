@@ -54,13 +54,6 @@ int update_ttl(struct iphdr *ip_hdr);
 
 
 /**
- * Quicksort compare function for sorting the route table entries
- * decreasingly by the mask length.
- */
-int rtable_compare_func(const void *mask1, const void *mask2);
-
-
-/**
  * LPM algorithm.
  * @param route_table Route table to search into.
  * @param target_ip Target IPv4 address to search a route for (Host order)

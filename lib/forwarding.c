@@ -58,7 +58,6 @@ int authorize_checksum(struct iphdr *ip_hdr) {
     uint16_t computed_checksum = checksum((uint16_t *) ip_hdr, sizeof(struct iphdr));
 
     if (htons(computed_checksum) != old_checksum) {
-        printf("Wrong checksum.\n");
         return 0;
     }
 
@@ -69,7 +68,6 @@ int authorize_checksum(struct iphdr *ip_hdr) {
 
 int update_ttl(struct iphdr *ip_hdr) {
     if (ip_hdr->ttl <= 1) {
-        printf("Time exceeded.\n");
         return 0;
     }
 
@@ -80,23 +78,6 @@ int update_ttl(struct iphdr *ip_hdr) {
     ip_hdr->check = htons(checksum((uint16_t *) ip_hdr, sizeof(struct iphdr)));
 
     return 1;
-}
-
-
-int rtable_compare_func(const void *rtable_entry1, const void *rtable_entry2) {
-    uint32_t mask1 = ntohl(((struct route_table_entry *) rtable_entry1)->mask);
-    uint32_t mask2 = ntohl(((struct route_table_entry *) rtable_entry2)->mask);
-
-    // To avoid overflow (must return an int).
-    if (mask1 > mask2) {
-        return -1;
-    }
-
-    if (mask1 < mask2) {
-        return 1;
-    }
-
-    return 0;
 }
 
 

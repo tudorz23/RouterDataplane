@@ -57,11 +57,10 @@ network_trie_node_t *trie_retrieve(network_trie_node_t *root, uint32_t target_ip
 
     network_trie_node_t *curr_node = root;
 
-    printf("Found bit ");
+    // At most 32 iterations (length of an IPv4 address).
     for (int i = 0; i < 32; i++) {
         int curr_bit = (target_ip >> shift_order) & 1;
 
-        printf("%d", curr_bit);
         if (curr_bit == 0) {
             if (curr_node->left == NULL) {
                 if (curr_node->final_state == TRUE) {
