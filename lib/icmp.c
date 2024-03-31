@@ -85,15 +85,12 @@ void create_icmp_error(struct iphdr *ip_hdr, uint8_t error_type, list arp_cache,
     err_ip_hdr->check = 0; // Initial value
     err_ip_hdr->daddr = ip_hdr->saddr;
 
-    // Best route is needed to deduce the source IP and MAC.
+    // Best route is needed to deduce the source IP.
     struct route_table_entry *best_route = get_best_route(route_table,
                                     ntohl(err_ip_hdr->daddr));
     DIE(!best_route, "There should be a valid route.\n");
 
     uint32_t source_ip = inet_addr((get_interface_ip(best_route->interface)));
-    uint8_t source_mac[6];
-    get_interface_mac(best_route->interface, source_mac);
-
     err_ip_hdr->saddr = source_ip;
 
     // Complete ICMP header.

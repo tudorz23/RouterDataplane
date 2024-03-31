@@ -12,6 +12,18 @@ route_table_t *init_route_table(const char *path) {
 
     route_table->size = read_rtable(path, route_table->entries);
 
+    // Insert all the prefixes in the trie.
+    route_table->trie_root = create_trie_node();
+
+    for (int i = 0; i < route_table->size; i++) {
+        uint32_t ip_prefix = ntohl(route_table->entries[i].prefix);
+        uint32_t ip_mask = ntohl(route_table->entries[i].mask);
+
+        network_trie_node_t *final_node = trie_insert(route_table->trie_root,
+                                                      ip_prefix, ip_mask);
+        final_node->entry = &route_table->entries[i];
+    }
+
     return route_table;
 }
 
@@ -88,18 +100,14 @@ int rtable_compare_func(const void *rtable_entry1, const void *rtable_entry2) {
 }
 
 
-// TODO: optimize the search algorithm
-struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t dest_ip) {
-    for (int i = 0; i < route_table->size; i++) {
-        uint32_t entry_prefix = ntohl(route_table->entries[i].prefix);
-        uint32_t entry_mask = ntohl(route_table->entries[i].mask);
+struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t target_ip) {
+    network_trie_node_t *best_node = trie_retrieve(route_table->trie_root, target_ip);
 
-        if ((dest_ip & entry_mask) == entry_prefix) {
-            return &route_table->entries[i];
-        }
+    if (!best_node) {
+        return NULL;
     }
 
-    return NULL;
+    return best_node->entry;
 }
 
 

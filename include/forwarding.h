@@ -5,6 +5,7 @@
 #include "list.h"
 #include "lib.h"
 #include "protocols.h"
+#include "trie.h"
 
 #define MAX_RTABLE_LEN 100001
 
@@ -12,13 +13,15 @@
 struct route_table {
     struct route_table_entry *entries;
     int size;
+    struct network_trie_node *trie_root;
 };
 
 typedef struct route_table route_table_t;
 
 
 /**
- * Initializes the route table entries and the table size.
+ * Initializes the route table entries and the table size. Then inserts
+ * all the prefixes in the trie.
  * @param path File to read the entries from
  * @return Allocated route table
  */
@@ -58,9 +61,12 @@ int rtable_compare_func(const void *mask1, const void *mask2);
 
 
 /**
- * Longest Prefix Match algorithm, done inefficiently.
+ * LPM algorithm.
+ * @param route_table Route table to search into.
+ * @param target_ip Target IPv4 address to search a route for (Host order)
+ * @return Best route to the machine with target_ip
  */
-struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t dest_ip);
+struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t target_ip);
 
 
 /**

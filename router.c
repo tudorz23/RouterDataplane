@@ -16,9 +16,6 @@ int main(int argc, char *argv[])
     // Route table is in network order.
     route_table_t *route_table = init_route_table(argv[1]);
 
-    qsort((void *) route_table->entries, route_table->size,
-          sizeof(struct route_table_entry), rtable_compare_func);
-
     // Initialize the ARP cache and the packet queue.
     list arp_cache = NULL;
     arp_packet_queue *packet_queue = init_packet_queue();
@@ -71,11 +68,13 @@ int main(int argc, char *argv[])
             struct route_table_entry *best_route = get_best_route(route_table,
                                             ntohl(ip_hdr->daddr));
             if (!best_route) {
+                printf("No route found for dest %u\n", ntohl(ip_hdr->daddr));
                 create_icmp_error(ip_hdr, ICMP_DEST_UNREACHABLE_TYPE,
                                   arp_cache, packet_queue, route_table);
                 continue;
             }
 
+            printf("Found route IP %u\n", ntohl(best_route->prefix));
             send_packet_safely(buf, len, arp_cache, packet_queue, best_route);
 
         } else if (ntohs(eth_hdr->ether_type) == ETHER_TYPE_ARP) {

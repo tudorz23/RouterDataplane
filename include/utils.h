@@ -22,4 +22,12 @@ void mac_copy(uint8_t *dest_mac, const uint8_t *src_mac);
 void update_mac_addresses(struct ether_header* eth_hdr, const uint8_t *new_dst,
                           const uint8_t *new_src);
 
+
+/**
+ * Knowing that an IPv4 mask starts with a sequence of "1" bits and ends
+ * with a sequence of "0" bits, counts the number of ones.
+ * @param ip_mask Valid IPv4 mask in Host order
+ */
+int get_mask_ones_cnt(uint32_t ip_mask);
+
 #endif /* UTILS_H */
