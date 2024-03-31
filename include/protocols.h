@@ -21,7 +21,6 @@
 #define ICMP_ECHO_REPLY_TYPE 0
 #define ICMP_DEST_UNREACHABLE_TYPE 3
 #define ICMP_TIME_EXCEEDED_TYPE 11
-#define ICMP_CODE 0
 
 
 /* Ethernet ARP packet from RFC 826 */

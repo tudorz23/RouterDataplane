@@ -38,10 +38,11 @@ void create_icmp_reply(struct iphdr *ip_hdr, size_t packet_len, list arp_cache,
     ans_icmp_hdr->un.echo.sequence = icmp_hdr->un.echo.sequence;
 
     // Copy the data from the original packet.
-    char *data = (char *) (((char *) icmp_hdr) + sizeof(struct icmphdr));
-    size_t data_len = packet_len - (sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct icmphdr));
+    char *data = (char*) (((char*) icmp_hdr) + sizeof(struct icmphdr));
+    size_t data_len = packet_len - (sizeof(struct ether_header) + sizeof(struct iphdr)
+                                    + sizeof(struct icmphdr));
 
-    char *ans_data = (char *) (((char *) ans_icmp_hdr) + sizeof(struct icmphdr));
+    char *ans_data = (char*) (((char*) ans_icmp_hdr) + sizeof(struct icmphdr));
     memcpy(ans_data, data, data_len);
 
     // Compute the checksums.
@@ -62,8 +63,8 @@ void create_icmp_error(struct iphdr *ip_hdr, uint8_t error_type, list arp_cache,
                        arp_packet_queue *packet_queue, route_table_t *route_table) {
     // Total size of the packet, consisting of the headers and first
     // 64 bits (i.e. 8 bytes) of data from the original packet.
-    size_t err_packet_len = sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct icmphdr)
-                            + sizeof(struct iphdr) + 8;
+    size_t err_packet_len = sizeof(struct ether_header) + sizeof(struct iphdr)
+                            + sizeof(struct icmphdr) + sizeof(struct iphdr) + 8;
 
     // Create the error packet.
     char *err_packet = malloc(err_packet_len);
@@ -107,7 +108,7 @@ void create_icmp_error(struct iphdr *ip_hdr, uint8_t error_type, list arp_cache,
     // Compute the checksums.
     err_ip_hdr->check = htons(checksum((uint16_t *) err_ip_hdr, sizeof(struct iphdr)));
     err_icmp_hdr->checksum = htons(checksum((uint16_t *) err_icmp_hdr,
-                                            sizeof(struct icmphdr) + sizeof(struct iphdr) + 8));
+                                   sizeof(struct icmphdr) + sizeof(struct iphdr) + 8));
 
     send_packet_safely(err_packet, err_packet_len, arp_cache, packet_queue, best_route);
     free(err_packet);

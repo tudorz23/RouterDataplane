@@ -64,7 +64,6 @@ network_trie_node_t *trie_retrieve(network_trie_node_t *root, uint32_t target_ip
         if (curr_bit == 0) {
             if (curr_node->left == NULL) {
                 if (curr_node->final_state == TRUE) {
-                    printf("\n");
                     return curr_node;
                 }
                 return NULL;
@@ -76,7 +75,6 @@ network_trie_node_t *trie_retrieve(network_trie_node_t *root, uint32_t target_ip
             // curr_bit == 1;
             if (curr_node->right == NULL) {
                 if (curr_node->final_state == TRUE) {
-                    printf("\n");
                     return curr_node;
                 }
                 return NULL;

@@ -1,6 +1,5 @@
 #include "forwarding.h"
 #include <netinet/in.h>
-#include <arpa/inet.h>
 
 
 route_table_t *init_route_table(const char *path) {
@@ -89,31 +88,4 @@ struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t ta
     }
 
     return best_node->entry;
-}
-
-
-void print_mac(uint8_t *mac_addr) {
-    for (int i = 0; i < 6; i++) {
-        printf("%x:", mac_addr[i]);
-    }
-    printf("\n");
-}
-void print_ip(char *ip_addr) {
-    printf("%s\n", ip_addr);
-}
-void print_rtable(struct route_table_entry *route_table, int cnt) {
-    for (int i = 0; i < cnt; i++) {
-        printf("Route table entry #%d: ", i);
-        printf("%u %u %u %d\n", route_table[i].prefix,
-               route_table[i].next_hop,
-               route_table[i].mask,
-               route_table[i].interface);
-    }
-}
-void print_arp_table(struct arp_table_entry *arp_table, int cnt) {
-    for (int i = 0; i < cnt; i++) {
-        printf("ARP table entry#%d: ", i);
-        printf("%u ", arp_table[i].ip);
-        print_mac(arp_table[i].mac);
-    }
 }

@@ -6,7 +6,7 @@
 
 arp_packet_queue *init_packet_queue() {
     arp_packet_queue *packet_queue = malloc(sizeof(arp_packet_queue));
-    DIE(!packet_queue, "Packet queue malloc failed.");
+    DIE(!packet_queue, "Packet queue malloc failed.\n");
 
     packet_queue->entries = queue_create();
     packet_queue->cnt = 0;
@@ -19,7 +19,7 @@ void send_arp_request(uint8_t *sender_mac, uint32_t sender_ip,
                       uint32_t target_ip, int interface) {
     uint8_t broadcast_mac[6];
     int res = hwaddr_aton("ff:ff:ff:ff:ff:ff", broadcast_mac);
-    DIE(res, "MAC broadcast address parsing failed.");
+    DIE(res, "MAC broadcast address parsing failed.\n");
 
     char *request_packet = create_arp_packet(sender_mac, broadcast_mac,
                                              sender_ip, target_ip, ARP_OP_REQUEST);
@@ -45,13 +45,13 @@ void send_arp_reply(uint8_t *sender_mac, uint8_t *target_mac,
 void add_packet_in_queue(arp_packet_queue *packet_queue, char *orig_packet,
                          struct route_table_entry *best_route, size_t packet_len) {
     char *new_packet = malloc(packet_len);
-    DIE(!new_packet, "Malloc for packet copy failed.");
+    DIE(!new_packet, "Malloc for packet copy failed.\n");
 
     memcpy(new_packet, orig_packet, packet_len);
 
     // Create a new queue entry.
     arp_queue_entry *new_entry = malloc(sizeof(arp_queue_entry ));
-    DIE(!new_entry, "Malloc for queue entry failed.");
+    DIE(!new_entry, "Malloc for queue entry failed.\n");
 
     new_entry->packet = new_packet;
     new_entry->packet_len = packet_len;
@@ -83,26 +83,11 @@ uint8_t *search_addr_in_cache(list arp_cache, uint32_t target_ip) {
 }
 
 
-int check_for_broadcast(uint8_t *target_mac) {
-    uint8_t broadcast_mac[6];
-    int res = hwaddr_aton("ff:ff:ff:ff:ff:ff", broadcast_mac);
-    DIE(res, "MAC broadcast address parsing failed.");
-
-    int cmp_res = memcmp(broadcast_mac, target_mac, 6 * sizeof(uint8_t));
-
-    if (cmp_res == 0) {
-        return 1;
-    }
-
-    return 0;
-}
-
-
 char *create_arp_packet(uint8_t *sender_mac, uint8_t *target_mac,
                        uint32_t sender_ip, uint32_t target_ip,
                        uint16_t arp_op) {
     char *packet = malloc(sizeof(struct ether_header) + sizeof (struct arp_header));
-    DIE(!packet, "ARP packet malloc failed.");
+    DIE(!packet, "ARP packet malloc failed.\n");
 
     struct ether_header *eth_hdr = (struct ether_header*) packet;
 
@@ -163,7 +148,7 @@ void handle_arp_reply(struct arp_header *arp_hdr, list *arp_cache,
 
 void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac) {
     arp_cache_entry *new_entry = malloc(sizeof(arp_cache_entry));
-    DIE(!new_entry, "ARP cache entry malloc failed.");
+    DIE(!new_entry, "ARP cache entry malloc failed.\n");
 
     new_entry->ip = ip;
     mac_copy(new_entry->mac, mac);

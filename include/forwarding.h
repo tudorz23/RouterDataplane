@@ -61,14 +61,4 @@ int update_ttl(struct iphdr *ip_hdr);
  */
 struct route_table_entry *get_best_route(route_table_t *route_table, uint32_t target_ip);
 
-
-/**
- * Prints MAC address in string form, with hex numbers.
- * Useful for debugging.
- */
-void print_mac(uint8_t* mac_addr);
-void print_ip(char *ip_addr);
-void print_rtable(struct route_table_entry *route_table, int cnt);
-void print_arp_table(struct arp_table_entry *arp_table, int cnt);
-
 #endif /* FORWARDING_H */

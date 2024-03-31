@@ -93,10 +93,6 @@ void add_packet_in_queue(arp_packet_queue *packet_queue, char *orig_packet,
 uint8_t *search_addr_in_cache(list arp_cache, uint32_t target_ip);
 
 
-
-int check_for_broadcast(uint8_t *target_mac);
-
-
 /**
  * Allocates memory for an ARP packet (Ethernet header + ARP header).
  * Can be used for both ARP request and ARP reply, if given the correct params.
@@ -145,6 +141,5 @@ void add_cache_entry(list *arp_cache, uint32_t ip, uint8_t *mac);
 void send_packet_safely(char *packet, size_t packet_len, list arp_cache,
                         arp_packet_queue *packet_queue,
                         struct route_table_entry *best_route);
-
 
 #endif /* ARP_H */
